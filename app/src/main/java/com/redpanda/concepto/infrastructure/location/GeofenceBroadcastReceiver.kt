@@ -3,62 +3,29 @@ package com.redpanda.concepto.infrastructure.location
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
-import androidx.room.Room
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingEvent
-import com.redpanda.concepto.infrastructure.local.AppDbContext
-import com.redpanda.concepto.infrastructure.local.entity.HotPointLogEntity
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class GeofenceBroadcastReceiver : BroadcastReceiver()
 {
     override fun onReceive(context: Context, intent: Intent)
     {
-        val geofencingEvent = GeofencingEvent.fromIntent(intent)
+        val event = GeofencingEvent.fromIntent(intent) ?: return
+        if (event.hasError()) return
 
-        if (geofencingEvent == null || geofencingEvent.hasError())
+        val transition = event.geofenceTransition
+        if (transition == Geofence.GEOFENCE_TRANSITION_ENTER ||
+            transition == Geofence.GEOFENCE_TRANSITION_DWELL)
         {
-            Log.e("GeofenceReceiver", "Error en el evento de geocerca")
-            return
-        }
+            event.triggeringGeofences?.forEach { geofence ->
+                val pointId = geofence.requestId.toLongOrNull() ?: return@forEach
 
-        if (geofencingEvent.geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER)
-        {
-            val triggeringGeofences = geofencingEvent.triggeringGeofences ?: return
-
-            val db = Room.databaseBuilder(
-                context.applicationContext,
-                AppDbContext::class.java,
-                "app_db"
-            )
-                .fallbackToDestructiveMigration(true)
-                .build()
-
-            val pointDao = db.hotPointDao()
-            val logDao = db.HotPointLogDao()
-
-            CoroutineScope(Dispatchers.IO).launch {
-                triggeringGeofences.forEach { geofence ->
-                    val pointId = geofence.requestId.toIntOrNull() ?: return@forEach
-
-                    val point = pointDao.getById(pointId)
-
-                    if (point != null)
-                    {
-                        val newLog = HotPointLogEntity(
-                            pointId = point.id,
-                            description = point.description,
-                            lat = point.lat,
-                            lon = point.lon,
-                            timestamp = System.currentTimeMillis()
-                        )
-                        logDao.insert(newLog)
-                        Log.d("GeofenceReceiver", "Log registrado: ${point.description}")
-                    }
+                val serviceIntent = Intent(context, GeofenceTrackingService::class.java).apply {
+                    putExtra("POINT_ID", pointId)
                 }
+                context.startForegroundService(serviceIntent)
             }
         }
     }

@@ -6,8 +6,8 @@ import androidx.room.PrimaryKey
 @Entity("hot_point_logs")
 data class HotPointLogEntity(
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
-    val pointId: Int,
+    val id: Long = 0,
+    val pointId: Long,
     val description: String,
     val lat: Double,
     val lon: Double,

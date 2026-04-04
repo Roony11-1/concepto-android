@@ -9,7 +9,7 @@ import com.redpanda.concepto.infrastructure.local.entity.HotPointLogEntity
 interface HotPointLogDao
 {
     @Insert
-    suspend fun insert(point: HotPointLogEntity)
+    suspend fun insert(point: HotPointLogEntity): Long
 
     @Query("SELECT * FROM hot_point_logs")
     suspend fun getAll(): List<HotPointLogEntity>

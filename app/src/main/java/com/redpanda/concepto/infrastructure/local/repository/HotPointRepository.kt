@@ -6,14 +6,16 @@ import com.redpanda.concepto.infrastructure.local.dao.HotPointDao
 import com.redpanda.concepto.infrastructure.local.mapper.HotPointMapper
 
 class HotPointRepository(
-    private val mapper: HotPointMapper = HotPointMapper(),
+    private val mapper: HotPointMapper,
     private val dao: HotPointDao) : IHotPointRepository
 {
-    override suspend fun save(point: HotPoint)
+    override suspend fun save(point: HotPoint): HotPoint
     {
         val entity = mapper.toEntity(point)
 
-        dao.insert(entity)
+        val newId = dao.insert(entity)
+
+        return point.copy(id = newId)
     }
 
     override suspend fun getAll(): List<HotPoint>
@@ -23,7 +25,7 @@ class HotPointRepository(
         return entities.map { entity ->  mapper.toDomain(entity) }
     }
 
-    override suspend fun getById(id: Int): HotPoint?
+    override suspend fun getById(id: Long): HotPoint?
     {
         val entity = dao.getById(id)
 
@@ -37,7 +39,7 @@ class HotPointRepository(
         return entity?.let { mapper.toDomain(it) }
     }
 
-    override suspend fun deleteById(id: Int)
+    override suspend fun deleteById(id: Long)
     {
         dao.deleteById(id)
     }

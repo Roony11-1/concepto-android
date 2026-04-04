@@ -4,9 +4,9 @@ import com.redpanda.concepto.domain.model.HotPoint
 
 interface IHotPointRepository
 {
-    suspend fun save(point: HotPoint)
+    suspend fun save(point: HotPoint): HotPoint
     suspend fun getAll(): List<HotPoint>
-    suspend fun getById(id: Int): HotPoint?
+    suspend fun getById(id: Long): HotPoint?
     suspend fun getByLocation(lat: Double, lon: Double): HotPoint?
-    suspend fun deleteById(id: Int)
+    suspend fun deleteById(id: Long)
 }

@@ -9,17 +9,17 @@ import com.redpanda.concepto.infrastructure.local.entity.HotPointEntity
 interface HotPointDao
 {
     @Insert
-    suspend fun insert(point: HotPointEntity)
+    suspend fun insert(entity: HotPointEntity): Long
 
     @Query("SELECT * FROM hot_points")
     suspend fun getAll(): List<HotPointEntity>
 
     @Query("SELECT * FROM hot_points WHERE id = :id")
-    suspend fun getById(id: Int): HotPointEntity?
+    suspend fun getById(id: Long): HotPointEntity?
 
     @Query("SELECT * FROM hot_points WHERE lat = :lat AND lon = :lon LIMIT 1")
     suspend fun getByLocation(lat: Double, lon: Double): HotPointEntity?
 
     @Query("DELETE FROM hot_points WHERE id = :id")
-    suspend fun deleteById(id: Int)
+    suspend fun deleteById(id: Long)
 }
