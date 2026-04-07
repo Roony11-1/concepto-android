@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.redpanda.concepto.domain.model.HotPoint
+import com.redpanda.concepto.infrastructure.loging.DebugState
 import com.redpanda.concepto.presentation.ui.theme.ConceptoTheme
 import com.redpanda.concepto.presentation.viewmodel.HotPointLogViewModel
 import com.redpanda.concepto.presentation.viewmodel.HotPointViewModel
@@ -41,8 +42,8 @@ class MainActivity : ComponentActivity()
         enableEdgeToEdge()
         setContent {
             ConceptoTheme {
-                val pointViewModel: HotPointViewModel = hiltViewModel()
-                val logViewModel: HotPointLogViewModel = hiltViewModel()
+                val pointViewModel: HotPointViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                val logViewModel: HotPointLogViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 
                 var showLogs by remember { androidx.compose.runtime.mutableStateOf(false) }
                 val sheetState = androidx.compose.material3.rememberModalBottomSheetState()
@@ -76,6 +77,11 @@ class MainActivity : ComponentActivity()
                     AddPointForm(pointViewModel)
                     Spacer(modifier = Modifier.height(16.dp))
                     PointList(points, pointViewModel)
+
+                    if (true)
+                    {
+                        DebugPanel()
+                    }
 
                     if (showLogs)
                     {
@@ -239,5 +245,22 @@ fun LogListContent(logs: List<com.redpanda.concepto.domain.model.HotPointLog>)
             }
         }
         Spacer(modifier = Modifier.height(32.dp))
+    }
+}
+
+@Composable
+fun DebugPanel()
+{
+    val logs = DebugState.logs.value
+
+    androidx.compose.foundation.lazy.LazyColumn(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+    ) {
+        items(logs.size)
+        {
+            Text(logs[it])
+        }
     }
 }

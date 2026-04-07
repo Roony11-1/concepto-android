@@ -5,22 +5,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.redpanda.concepto.domain.interfaces.repository.IHotPointRepository
 import com.redpanda.concepto.domain.model.HotPoint
-import com.redpanda.concepto.infrastructure.location.GeofenceManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class HotPointViewModel @Inject constructor(
-    private val hotPointRepository: IHotPointRepository,
-    private val geofenceManager: GeofenceManager) : ViewModel()
+    private val hotPointRepository: IHotPointRepository) : ViewModel()
 {
     var points = mutableStateOf<List<HotPoint>>(emptyList())
 
     fun loadPoints()
     {
         viewModelScope.launch {
-            points.value = hotPointRepository.getAll()
+            val data = hotPointRepository.getAll()
+            points.value = data
         }
     }
 
@@ -28,15 +27,6 @@ class HotPointViewModel @Inject constructor(
     {
         viewModelScope.launch {
             val savedPoint = hotPointRepository.save(point)
-
-            try
-            {
-                geofenceManager.addGeofence(savedPoint)
-            }
-            catch (e: SecurityException)
-            {
-                e.printStackTrace()
-            }
 
             loadPoints()
         }
@@ -46,8 +36,6 @@ class HotPointViewModel @Inject constructor(
     {
         viewModelScope.launch {
             hotPointRepository.deleteById(id)
-
-            geofenceManager.removeGeofence(id)
 
             loadPoints()
         }

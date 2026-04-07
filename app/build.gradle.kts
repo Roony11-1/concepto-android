@@ -40,8 +40,6 @@ android {
     buildFeatures {
         compose = true
     }
-
-    // ✅ Obligatorio: fijar la versión del compilador de Compose compatible con Kotlin 1.9.24
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.14"
     }
