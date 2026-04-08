@@ -12,20 +12,25 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.redpanda.concepto.domain.model.HotPoint
+import com.redpanda.concepto.infrastructure.location.SimpleLocationTracker
 import com.redpanda.concepto.infrastructure.loging.DebugState
 import com.redpanda.concepto.presentation.ui.theme.ConceptoTheme
 import com.redpanda.concepto.presentation.viewmodel.HotPointLogViewModel
@@ -39,11 +44,19 @@ class MainActivity : ComponentActivity()
     override fun onCreate(savedInstanceState: Bundle?)
     {
         super.onCreate(savedInstanceState)
+
+        DebugState.configure(
+            enabled = true,
+            showTime = true,
+            level = DebugState.LogLevel.DEBUG)
+
+        DebugState.separator("APP START")
+
         enableEdgeToEdge()
         setContent {
             ConceptoTheme {
-                val pointViewModel: HotPointViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
-                val logViewModel: HotPointLogViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                val pointViewModel: HotPointViewModel = viewModel()
+                val logViewModel: HotPointLogViewModel = viewModel()
 
                 var showLogs by remember { androidx.compose.runtime.mutableStateOf(false) }
                 val sheetState = androidx.compose.material3.rememberModalBottomSheetState()
@@ -81,6 +94,16 @@ class MainActivity : ComponentActivity()
                     if (true)
                     {
                         DebugPanel()
+                    }
+
+                    Button(onClick = { pointViewModel.startTracking(this@MainActivity) })
+                    {
+                        Text("Iniciar tracking")
+                    }
+
+                    Button(onClick = { pointViewModel.stopTracking() })
+                    {
+                        Text("Detener tracking")
                     }
 
                     if (showLogs)
@@ -251,16 +274,39 @@ fun LogListContent(logs: List<com.redpanda.concepto.domain.model.HotPointLog>)
 @Composable
 fun DebugPanel()
 {
-    val logs = DebugState.logs.value
+    val logs = DebugState.logs
+    val listState = rememberLazyListState()
 
-    androidx.compose.foundation.lazy.LazyColumn(
+    LaunchedEffect(logs.size)
+    {
+        if (logs.isNotEmpty())
+        {
+            listState.animateScrollToItem(logs.size - 1)
+        }
+    }
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .height(200.dp)
-    ) {
-        items(logs.size)
+            .padding(8.dp))
+    {
+        Button(onClick = { DebugState.clear() })
         {
-            Text(logs[it])
+            Text("Limpiar logs")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize())
+        {
+            items(logs.size) { index ->
+                Text(
+                    text = logs[index],
+                    style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 }
